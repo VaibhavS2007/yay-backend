@@ -1,0 +1,36 @@
+import dotenv from "dotenv";
+import connectDB from "./config/database.js";
+import app from "./app.js";
+import dns from "node:dns";
+
+dotenv.config({
+  path: "./.env"
+});
+
+if (process.env.DNS_SERVER) {
+  dns.setServers(process.env.DNS_SERVER.split(",").map((s) => s.trim()));
+} else {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+}
+
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.on("error", (error) => {
+      console.log("Application error:", error);
+      throw error;
+    });
+
+    const port = process.env.PORT || 8000;
+
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error.message);
+    process.exitCode = 1;
+  }
+};
+
+startServer();
